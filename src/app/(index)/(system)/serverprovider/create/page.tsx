@@ -4,9 +4,11 @@ import { DeleteOutlined } from "@ant-design/icons";
 import SubmitButton from "@/components/SubmitButton";
 import SeverProviderApis from "@/api/serverproviderapis";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 const { createServerProviderApi } = SeverProviderApis();
 export default function NewServerProviderPage() {
   const [form] = Form.useForm();
+  const router = useRouter();
   const { mutateAsync: createServerProvider, isPending } = useMutation({
     mutationKey: ["create-server-provider"],
     mutationFn: createServerProviderApi,
@@ -33,14 +35,14 @@ export default function NewServerProviderPage() {
     createServerProvider(data)
       .then((res) => {
         message.success("Create new server provider successfully!");
-        form.resetFields();
+        router.push("/serverprovider");
       })
       .catch((err) => {
         message.error(err.response.data.message);
       });
   };
   const onClear = () => {
-    form.resetFields();
+    router.push("/serverprovider");
   };
   return (
     <div className=" flex justify-center items-center content-center ">

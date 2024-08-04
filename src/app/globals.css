@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+div::-webkit-scrollbar {
+  display: none;
+}
+.ant-table-body::-webkit-scrollbar {
+  display: none;
+}
+.ant-upload-select {
+  min-width: 50px !important;
+  min-height: 50px !important;
+  width: 200px !important;
+  height: 200px !important;
+}
 /* :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

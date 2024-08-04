@@ -6,6 +6,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import AutoCompleteApi from "@/api/autocomplete";
 import AccountApi from "@/api/accountapis";
 import SubmitButton from "@/components/SubmitButton";
+import { useRouter } from "next/navigation";
+
 const StatusItems = [
   {
     value: 0,
@@ -24,6 +26,7 @@ type GroupType = {
 const { createNewAdminApi } = AccountApi();
 const { GetAutoCompleteApi } = AutoCompleteApi();
 const NewAdminPage = () => {
+  const router = useRouter();
   const [form] = Form.useForm();
   const onFinish = (values: any) => {
     const data = {
@@ -38,11 +41,11 @@ const NewAdminPage = () => {
     };
     createNewAdmin(data).then((res) => {
       message.success("Create new admin successfully!");
-      form.resetFields();
+      router.push("/admin");
     });
   };
   const onClear = () => {
-    form.resetFields();
+    router.push("/admin");
   };
   const { data: GroupItems } = useQuery({
     queryKey: ["auto-complete-group"],

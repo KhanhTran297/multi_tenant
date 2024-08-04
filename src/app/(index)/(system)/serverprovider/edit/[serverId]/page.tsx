@@ -2,9 +2,10 @@
 
 import SeverProviderApis from "@/api/serverproviderapis";
 import SubmitButton from "@/components/SubmitButton";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Card, Form, Input, message, Space } from "antd";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Card, Form, Input, message, Space, Spin } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
+import { useRouter } from "next/navigation";
 const { editServerProviderApi, getDetailServerProviderApi } =
   SeverProviderApis();
 type SeverProviderType = {
@@ -23,6 +24,8 @@ export default function EditServerProviderPage({
   params: { serverId: string };
 }) {
   const [form] = Form.useForm();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const handleJoinJdbcUrl = (host: string, port: string, driver: string) => {
     const shortternDriver = driver.split(".");
     return `jdbc:${shortternDriver[1]}://${host}:${port}/`;
@@ -32,19 +35,25 @@ export default function EditServerProviderPage({
     const port = jdbcUrl.split(":")[3].split("/")[0];
     return { host, port };
   };
-  const { data: detailSeverProvider } = useQuery({
+  const { data: detailSeverProvider, isLoading } = useQuery({
     queryKey: ["getDetailServerProvider", params.serverId],
     queryFn: () =>
       getDetailServerProviderApi(parseInt(params.serverId)).then(
         async (res) => {
           const { host, port } = await handleExtractJdbcUrl(res.data.jdbcUrl);
-          form.setFieldsValue({
+          // form.setFieldsValue({
+          //   ...res.data,
+          //   host,
+          //   port,
+          // });
+          const initialData = {
             ...res.data,
             host,
             port,
-          });
+            driverClassName: "org.postgresql.Driver",
+          };
 
-          return res.data;
+          return initialData;
         }
       ),
   });
@@ -69,8 +78,24 @@ export default function EditServerProviderPage({
     };
     editServerProvider(data)
       .then((res) => {
-        message.success("Create new server provider successfully!");
-        form.resetFields();
+        queryClient.setQueryData(
+          ["getDetailServerProvider", params.serverId],
+          (oldData: any) => {
+            return {
+              ...oldData,
+              name: data.name,
+              url: data.url,
+              maxTenant: data.maxTenant,
+              rootPassword: data.rootPassword,
+              rootUser: data.rootUser,
+              jdbcUrl: data.jdbcUrl,
+              driverClassName: data.driverClassName,
+            };
+          }
+        );
+        message.success("Edit server provider successfully!");
+        router.push("/serverprovider");
+        // form.resetFields();
       })
       .catch((err) => {
         message.error(err.response.data.message);
@@ -81,149 +106,157 @@ export default function EditServerProviderPage({
   };
   return (
     <div className=" flex justify-center items-center content-center ">
-      <Form
-        form={form}
-        name="editserverprovider"
-        onFinish={onFinish}
-        layout="horizontal"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "30px",
-          width: "50%",
-        }}
-        initialValues={{
-          driverClassName: "org.postgresql.Driver",
-        }}
-      >
-        <div className="flex flex-row justify-between gap-3">
-          <Form.Item
-            label="Name"
-            name="name"
-            layout="vertical"
-            style={{ width: "50%" }}
-            rules={[{ required: true, message: "Please input server name!" }]}
-          >
-            <Input placeholder="Name"></Input>
-          </Form.Item>
-        </div>
-        <Card title="Server Information" style={{ width: "100%" }}>
+      {isLoading ? (
+        <Spin />
+      ) : (
+        <Form
+          form={form}
+          name="editserverprovider"
+          onFinish={onFinish}
+          layout="horizontal"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "30px",
+            width: "50%",
+          }}
+          initialValues={detailSeverProvider}
+        >
           <div className="flex flex-row justify-between gap-3">
             <Form.Item
-              label="Api Url"
-              name="url"
+              label="Name"
+              name="name"
               layout="vertical"
               style={{ width: "50%" }}
-              rules={[
-                {
-                  required: true,
-                  message: "Please input server api url!",
-                },
-              ]}
+              rules={[{ required: true, message: "Please input server name!" }]}
             >
-              <Input placeholder="Api Url" />
-            </Form.Item>
-            <Form.Item
-              label="Max Tenant"
-              name="maxTenant"
-              layout="vertical"
-              style={{ width: "50%" }}
-              rules={[
-                { required: true, message: "Please input max tenant!" },
-                {
-                  pattern: /^[0-9]*$/,
-                  message: "The number of tenant must be numeric!",
-                },
-              ]}
-            >
-              <Input placeholder="Max Tenant"></Input>
+              <Input placeholder="Name"></Input>
             </Form.Item>
           </div>
-        </Card>
-        <Card title="Mysql Information" style={{ width: "100%" }}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <div className="flex flex-row justify-between gap-3 ">
+          <Card title="Server Information" style={{ width: "100%" }}>
+            <div className="flex flex-row justify-between gap-3">
               <Form.Item
-                label="Mysql Host"
-                name="host"
-                layout="vertical"
-                style={{ width: "50%" }}
-                rules={[
-                  { required: true, message: "Please input Mysql host!" },
-                ]}
-              >
-                <Input placeholder="host" />
-              </Form.Item>
-              <Form.Item
-                label="Port"
-                name="port"
-                layout="vertical"
-                style={{ width: "50%" }}
-                rules={[
-                  { required: true, message: "Please input port!" },
-                  {
-                    pattern: /^[0-9]*$/,
-                    message: "The port must be numeric!",
-                  },
-                ]}
-              >
-                <Input placeholder="port" />
-              </Form.Item>
-            </div>
-            <div className="flex flex-row justify-between gap-3 ">
-              <Form.Item
-                label="MySql Root User"
-                name="rootUser"
-                layout="vertical"
-                style={{ width: "50%" }}
-                rules={[{ required: true, message: "Please input root user!" }]}
-              >
-                <Input placeholder="root user" />
-              </Form.Item>
-              <Form.Item
-                label="Root Password"
-                name="rootPassword"
+                label="Api Url"
+                name="url"
                 layout="vertical"
                 style={{ width: "50%" }}
                 rules={[
                   {
                     required: true,
-                    message: "Please input root password!",
+                    message: "Please input server api url!",
                   },
                 ]}
               >
-                <Input.Password placeholder="root password" />
+                <Input placeholder="Api Url" />
               </Form.Item>
-            </div>
-            <div className="flex flex-row justify-between gap-3 ">
               <Form.Item
-                label="Driver Classname"
-                name="driverClassName"
+                label="Max Tenant"
+                name="maxTenant"
                 layout="vertical"
                 style={{ width: "50%" }}
-                rules={[{ required: true, message: "Please input root user!" }]}
+                rules={[
+                  { required: true, message: "Please input max tenant!" },
+                  {
+                    pattern: /^[0-9]*$/,
+                    message: "The number of tenant must be numeric!",
+                  },
+                ]}
               >
-                <Input placeholder="driverClassName" disabled />
+                <Input placeholder="Max Tenant"></Input>
               </Form.Item>
             </div>
-          </Space>
-        </Card>
+          </Card>
+          <Card title="Mysql Information" style={{ width: "100%" }}>
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <div className="flex flex-row justify-between gap-3 ">
+                <Form.Item
+                  label="Mysql Host"
+                  name="host"
+                  layout="vertical"
+                  style={{ width: "50%" }}
+                  rules={[
+                    { required: true, message: "Please input Mysql host!" },
+                  ]}
+                >
+                  <Input placeholder="host" />
+                </Form.Item>
+                <Form.Item
+                  label="Port"
+                  name="port"
+                  layout="vertical"
+                  style={{ width: "50%" }}
+                  rules={[
+                    { required: true, message: "Please input port!" },
+                    {
+                      pattern: /^[0-9]*$/,
+                      message: "The port must be numeric!",
+                    },
+                  ]}
+                >
+                  <Input placeholder="port" />
+                </Form.Item>
+              </div>
+              <div className="flex flex-row justify-between gap-3 ">
+                <Form.Item
+                  label="MySql Root User"
+                  name="rootUser"
+                  layout="vertical"
+                  style={{ width: "50%" }}
+                  rules={[
+                    { required: true, message: "Please input root user!" },
+                  ]}
+                >
+                  <Input placeholder="root user" />
+                </Form.Item>
+                <Form.Item
+                  label="Root Password"
+                  name="rootPassword"
+                  layout="vertical"
+                  style={{ width: "50%" }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input root password!",
+                    },
+                  ]}
+                >
+                  <Input.Password placeholder="root password" />
+                </Form.Item>
+              </div>
+              <div className="flex flex-row justify-between gap-3 ">
+                <Form.Item
+                  label="Driver Classname"
+                  name="driverClassName"
+                  layout="vertical"
+                  style={{ width: "50%" }}
+                  rules={[
+                    { required: true, message: "Please input root user!" },
+                  ]}
+                >
+                  <Input placeholder="driverClassName" disabled />
+                </Form.Item>
+              </div>
+            </Space>
+          </Card>
 
-        <div className="flex flex-row justify-end gap-4  ">
-          <Button
-            type="default"
-            danger
-            onClick={onClear}
-            icon={<DeleteOutlined style={{ color: "red" }} />}
-          >
-            Cancel
-          </Button>
+          <div className="flex flex-row justify-end gap-4  ">
+            <Button
+              type="default"
+              danger
+              onClick={() => {
+                router.push("/serverprovider");
+              }}
+              icon={<DeleteOutlined style={{ color: "red" }} />}
+            >
+              Cancel
+            </Button>
 
-          <SubmitButton form={form} isLoading={isPending}>
-            Edit
-          </SubmitButton>
-        </div>
-      </Form>
+            <SubmitButton form={form} isLoading={isPending}>
+              Edit
+            </SubmitButton>
+          </div>
+        </Form>
+      )}
     </div>
   );
 }

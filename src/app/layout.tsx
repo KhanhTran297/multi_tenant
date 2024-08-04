@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import TanstackProvider from "../../provider/TanStackProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -17,7 +15,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const queryClient = new QueryClient();
   return (
     <html lang="en">
       <body className={" h-screen"} suppressHydrationWarning={true}>

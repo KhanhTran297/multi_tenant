@@ -21,6 +21,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import AccountApi from "@/api/accountapis";
+import BreadCrumbView from "@/components/BreadCrumbView";
 
 type GroupType = {
   id: Number;
@@ -81,7 +82,13 @@ export default function MainLayout({
   const segments = pathname.split("/");
   const currentPath = segments[1];
   return (
-    <Layout style={{ height: "100vh" }}>
+    <Layout
+      style={{
+        height: "100vh",
+        maxHeight: "100vh",
+        // overflowY: "scroll",
+      }}
+    >
       <Layout.Sider
         trigger={null}
         collapsible
@@ -174,6 +181,7 @@ export default function MainLayout({
             </a>
           </Dropdown>
         </Header>
+        <BreadCrumbView />
         {children}
       </Layout>
     </Layout>
