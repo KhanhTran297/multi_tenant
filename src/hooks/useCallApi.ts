@@ -1,4 +1,4 @@
-import { instance } from "@/api/instance";
+import { instance, instanceFile } from "@/api/instance";
 import { AxiosRequestConfig } from "axios";
 type Auth = {
   username: string;
@@ -34,7 +34,7 @@ function useCallApi() {
         });
     });
   };
-  const UsePost = <T>({
+  const UsePostFile = <T>({
     url = "",
     data = {},
     params = {},
@@ -45,9 +45,43 @@ function useCallApi() {
     let credentials = btoa(`${auth.username}:${auth.password}`);
     // If required TOKEN -> Get Access Token from LocalStorage
     requiredToken &&
+      (instanceFile.defaults.headers[
+        "Authorization"
+      ] = `Bearer ${localStorage.getItem("tokenMeta")}`);
+    basicAuth &&
+      (instanceFile.defaults.headers["Authorization"] = `Basic ${credentials}`);
+
+    return new Promise((resolve, reject) => {
+      instanceFile
+        .post(url, data, {
+          params,
+          ...instanceFile.defaults.headers,
+        })
+        .then((response) => {
+          resolve(response);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  };
+  const UsePost = <T>({
+    url = "",
+    data = {},
+    params = {},
+    requiredToken = false,
+    basicAuth = false,
+    uploadFile = false,
+    auth = {} as Auth,
+  }) => {
+    let credentials = btoa(`${auth.username}:${auth.password}`);
+    // If required TOKEN -> Get Access Token from LocalStorage
+    requiredToken &&
       (instance.defaults.headers[
         "Authorization"
       ] = `Bearer ${localStorage.getItem("tokenMeta")}`);
+    uploadFile &&
+      (instance.defaults.headers["Content-Type"] = "multipart/form-data");
     basicAuth &&
       (instance.defaults.headers["Authorization"] = `Basic ${credentials}`);
 
@@ -122,6 +156,7 @@ function useCallApi() {
     UsePost,
     UseEdit,
     UseDelete,
+    UsePostFile,
   };
 }
 export default useCallApi;

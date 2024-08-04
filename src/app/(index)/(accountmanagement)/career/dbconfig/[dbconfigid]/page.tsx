@@ -4,9 +4,10 @@ import SeverProviderApis from "@/api/serverproviderapis";
 import SubmitButton from "@/components/SubmitButton";
 import { CheckOutlined, CloseOutlined, FormOutlined } from "@ant-design/icons";
 import { DeleteOutlined } from "@ant-design/icons";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button, Form, Input, message, Select, Spin, Switch } from "antd";
+import { useRouter } from "next/navigation";
 
 const { getDetailDbConfigApi, updateDbConfigApi } = DbConfigApis();
 const { getListServerProviderApi } = SeverProviderApis();
@@ -16,6 +17,8 @@ export default function EditDbconfigPage({
   params: { dbconfigid: string };
 }) {
   const [form] = Form.useForm();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const handleJoinJdbcUrl = (host: string, port: string, driver: string) => {
     const shortternDriver = driver.split(".");
     return `jdbc:${shortternDriver[1]}://${host}:${port}/`;
@@ -79,16 +82,25 @@ export default function EditDbconfigPage({
       initialize: values.initialize,
       maxConnection: values.maxConnection,
     };
-    console.log("values", data);
-    // updateDbConfig(data).then((res) => {
-    //   message.success("Create new admin successfully!");
-    //   form.resetFields();
-    // });
+    updateDbConfig(data).then((res) => {
+      message.success("update db-config successfully!");
+      queryClient.setQueryData(
+        ["get-dbconfig", params.dbconfigid],
+        (oldData: any) => {
+          return {
+            ...oldData,
+            initialize: data.initialize,
+            maxConnection: data.maxConnection,
+          };
+        }
+      );
+      router.push("/career");
+    });
   };
   const onClear = () => {
-    form.resetFields();
+    router.push("/career");
   };
-
+  console.log("detailDbconfig", detailDbconfig);
   return (
     <div className=" flex justify-center items-center content-center ">
       {isLoading ? (
@@ -251,14 +263,17 @@ export default function EditDbconfigPage({
               Cancel
             </Button>
 
-            <Button
+            {/* <Button
               type="primary"
               htmlType="submit"
               loading={isPending}
               icon={<FormOutlined />}
             >
               Update
-            </Button>
+            </Button> */}
+            <SubmitButton form={form} isLoading={isPending}>
+              Update
+            </SubmitButton>
           </div>
         </Form>
       )}

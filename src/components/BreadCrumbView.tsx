@@ -24,7 +24,6 @@ const BreadCrumbView = () => {
         .split("/")
         .slice(1)
         .filter((item) => {
-          console.log("item", item);
           return item !== params[Object.keys(params)[0]];
         });
     }

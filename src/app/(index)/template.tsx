@@ -22,17 +22,17 @@ export default function Template({ children }: { children: React.ReactNode }) {
     //   <BreadCrumbView />
     //   {children}
     // </div>
-    <div className=" h-full">
-      <BreadCrumbView />
+    <div className=" max-h-full h-full overflow-y-scroll scroll-smooth ">
       <Content
         style={{
-          margin: "24px 16px",
+          margin: "0px 16px 24px 16px",
           padding: 24,
-          minHeight: 280,
-          height: 500,
+          minHeight: 500,
+          maxHeight: "max-content",
+          height: "auto",
           background: colorBgContainer,
           borderRadius: borderRadiusLG,
-          overflowY: "scroll",
+          // overflowY: "scroll",
         }}
       >
         {children}

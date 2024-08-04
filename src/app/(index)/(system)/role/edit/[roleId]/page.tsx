@@ -1,7 +1,7 @@
 "use client";
 import RoleApis from "@/api/roleapis";
 import SubmitButton from "@/components/SubmitButton";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -17,6 +17,7 @@ import {
 import { DeleteOutlined } from "@ant-design/icons";
 import React, { useState } from "react";
 import PermissionsApis from "@/api/permissions";
+import { useRouter } from "next/navigation";
 type PermissionDataType = {
   createdBy: string;
   createdDate: string;
@@ -53,9 +54,11 @@ export default function EditRolePage({
   params: { roleId: string };
 }) {
   const [form] = Form.useForm();
+  const router = useRouter();
   const [groupPermission, setGroupPermission] = useState<{
     groupPermissions: Array<number>;
   }>({ groupPermissions: [] });
+  const queryClient = useQueryClient();
   const { data: listAllPermissions } = useQuery({
     queryKey: ["getListPermissions"],
     queryFn: () =>
@@ -110,8 +113,20 @@ export default function EditRolePage({
 
     editRole(data)
       .then((res) => {
+        queryClient.setQueryData(
+          ["getDetailRole", params.roleId],
+          (oldData: any) => {
+            return {
+              ...oldData,
+              name: data.name,
+              description: data.description,
+              groupPermissions: [...data.permissions],
+            };
+          }
+        );
         message.success("edit permission successfully!");
         // form.resetFields();
+        router.push("/role");
       })
       .catch((err) => {
         message.error(err.response.data.message);
@@ -128,7 +143,7 @@ export default function EditRolePage({
       ) : (
         <Form
           form={form}
-          name="editserverprovider"
+          name="editrole"
           onFinish={onFinish}
           layout="horizontal"
           style={{
@@ -201,7 +216,7 @@ export default function EditRolePage({
               <Button
                 type="default"
                 danger
-                onClick={onClear}
+                onClick={() => router.push("/role")}
                 icon={<DeleteOutlined style={{ color: "red" }} />}
               >
                 Cancel
@@ -212,48 +227,6 @@ export default function EditRolePage({
               </SubmitButton>
             </div>
           </div>
-
-          {/* <div className="flex flex-col gap-3">
-          {listAllPermissions &&
-            Object.keys(listAllPermissions).map((group: any, index) => {
-              return (
-                <Card key={index} title={group} style={{ width: "100%" }}>
-                  <Space direction="vertical" style={{ width: "100%" }}>
-                    <Form.Item name={group}>
-                      <Checkbox.Group>
-                        {listAllPermissions[group].map(
-                          (permission: PermissionDataType) => {
-                            return (
-                              <Checkbox
-                                key={permission.permissionCode}
-                                value={permission.id}
-                              >
-                                {permission.name}
-                              </Checkbox>
-                            );
-                          }
-                        )}
-                      </Checkbox.Group>
-                    </Form.Item>
-                  </Space>
-                </Card>
-              );
-            })}
-          <div className="flex flex-row justify-end gap-4  ">
-            <Button
-              type="default"
-              danger
-              onClick={onClear}
-              icon={<DeleteOutlined style={{ color: "red" }} />}
-            >
-              Cancel
-            </Button>
-
-            <SubmitButton form={form} isLoading={isPending}>
-              Edit
-            </SubmitButton>
-          </div>
-        </div> */}
         </Form>
       )}
     </div>

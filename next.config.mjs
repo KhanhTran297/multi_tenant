@@ -7,6 +7,11 @@ const nextConfig = {
         hostname: "i.pinimg.com",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "base-meta.s3.ap-southeast-1.amazonaws.com",
+        port: "",
+      },
     ],
   },
 };
