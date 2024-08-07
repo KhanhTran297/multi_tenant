@@ -105,7 +105,7 @@ export default function NewServerProviderPage() {
             </Form.Item>
           </div>
         </Card>
-        <Card title="Mysql Information" style={{ width: "100%" }}>
+        <Card title="Database Information" style={{ width: "100%" }}>
           <Space direction="vertical" size={26} style={{ width: "100%" }}>
             <div className="flex flex-row justify-between gap-3 ">
               <Form.Item
